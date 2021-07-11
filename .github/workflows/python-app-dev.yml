@@ -1,13 +1,13 @@
 # hello
 # goodbye
 
-name: Credit Card Auth Api
+name: Credit Card Auth Api - Dev Workflow
 
 on:
   push:
-    branches: [ master ]
+    branches: [ development ]
   pull_request:
-    branches: [ master ]
+    branches: [ development ]
 
 jobs:
   build:
