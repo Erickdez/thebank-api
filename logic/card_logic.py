@@ -33,7 +33,7 @@ class CardLogic(PybaLogic):
         sql = (
             f"INSERT INTO `thebank`.`products`"
             + f"(`id`,`name`,`number`,`date`,`code`,`salt`,`balance`) "
-            + f"VALUES(0,'{card['name']}','{card['number']}','{card['date']}','{strCode}',"
+            + f"VALUES(0,'{card['name']}','{card['number']}','{card['date']}','{strCode}','{card['status']}' "
             + f"'{strSalt}',{fBalance});"
         )
         rows = database.executeNonQueryRows(sql)
@@ -52,8 +52,8 @@ class CardLogic(PybaLogic):
 
         sql = (
             f"UPDATE `thebank`.`products` "
-            + f"SET `name` = '{card['Name']}',`date` = '{card['Date']}',"
-            + f"`code` = '{strCode}',`salt` = {strSalt},`balance` = {card['Balance']} "
+            + f"SET `name` = '{card['name']}',`date` = '{card['date']}',`code` = '{strCode}',"
+            + f"`salt` = {strSalt},`balance` = {card['balance']},`status` = {card['status']},`limit` = {card['limit']} "
             + f"WHERE `number` = {number};"
         )
         rows = database.executeNonQueryRows(sql)
@@ -69,11 +69,18 @@ class CardLogic(PybaLogic):
             print(actualBalance)
 
         cardDigits = cardDict['number']
-        cardType = cardDigits[0:5]
+        cardType = cardDigits[0:4]
+
         if cardType == "7000": #Crédito
-            newBalance = cardDict['balance'] + data['balance']
-        else: #Débito
-            newBalance = cardDict['balance'] - data['balance']
+            newBalance = float(cardDict['balance']) + float(data['balance'])
+            if newBalance > float(cardDict['limit']):
+                return "61" #Excede el limite
+        elif cardType == "6000": #Débito
+            newBalance = float(cardDict['balance']) - data['balance']
+            if newBalance < 0:
+                return "51" #Saldo insuficiente
+        else:
+            return "QY" #Tipo de Tarjeta Invalido
 
         sql = (
             f"UPDATE `thebank`.`products` "
@@ -81,4 +88,4 @@ class CardLogic(PybaLogic):
             + f"WHERE `number` = {data['number']};"
         )
         rows = database.executeNonQueryRows(sql)
-        return rows
+        return "00" #OK!
